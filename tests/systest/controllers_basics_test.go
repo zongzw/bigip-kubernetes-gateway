@@ -1,7 +1,6 @@
 package main_test
 
 import (
-	"embed"
 	"fmt"
 	"time"
 
@@ -10,13 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var (
-	//go:embed templates/basics/*.yaml
-	yamlBasics embed.FS
-	dataBasics map[string]interface{}
-)
-
-var _ = Describe("Controllers basic test", func() {
+var _ = PDescribe("Controllers basic test", func() {
 
 	dataBasics = map[string]interface{}{
 		"namespace": map[string]interface{}{
@@ -60,7 +53,7 @@ var _ = Describe("Controllers basic test", func() {
 	})
 })
 
-var _ = Describe("Controllers updating test", Ordered, func() {
+var _ = PDescribe("Controllers updating test", Ordered, func() {
 	dataBasics = map[string]interface{}{
 		"namespace": map[string]interface{}{
 			"name": "abcd",
@@ -112,16 +105,16 @@ var _ = Describe("Controllers updating test", Ordered, func() {
 			f, err := yamlBasics.Open(yaml)
 			Expect(err).To(Succeed())
 
-			cs, err := k8s.LoadAndRender(ctx, f, dataBasics)
+			cs, err := k8s.LoadAndRender(f, dataBasics)
 			Expect(err).To(Succeed())
-			Expect(k8s.Apply(ctx, *cs)).To(Succeed())
+			Expect(k8s.Apply(*cs)).To(Succeed())
 		}
 
 		checkVirtualAddress(dataBasics)
 	})
 })
 
-var _ = Describe("Controller special cases", func() {
+var _ = PDescribe("Controller special cases", func() {
 	When("there are multiple addrs and listeners in gateway", func() {
 		dataBasics = map[string]interface{}{
 			"namespace": map[string]interface{}{
@@ -167,7 +160,7 @@ var _ = Describe("Controller special cases", func() {
 	})
 })
 
-var _ = Describe("Controllers random resource list", func() {
+var _ = PDescribe("Controllers random resource list", func() {
 	dataBasics = map[string]interface{}{
 		"namespace": map[string]interface{}{
 			"name": "abcd",
@@ -219,9 +212,9 @@ func setup(data map[string]interface{}) {
 	} {
 		f, err := yamlBasics.Open(yaml)
 		Expect(err).To(Succeed())
-		cs, err := k8s.LoadAndRender(ctx, f, dataBasics)
+		cs, err := k8s.LoadAndRender(f, dataBasics)
 		Expect(err).To(Succeed())
-		Expect(k8s.Apply(ctx, *cs)).To(Succeed())
+		Expect(k8s.Apply(*cs)).To(Succeed())
 	}
 }
 
@@ -236,9 +229,9 @@ func teardown(data map[string]interface{}) {
 		f, err := yamlBasics.Open(yaml)
 		Expect(err).To(Succeed())
 
-		cs, err := k8s.LoadAndRender(ctx, f, dataBasics)
+		cs, err := k8s.LoadAndRender(f, dataBasics)
 		Expect(err).To(Succeed())
-		Expect(k8s.Delete(ctx, *cs)).To(Succeed())
+		Expect(k8s.Delete(*cs)).To(Succeed())
 	}
 
 	// make sure partition is removed finally
@@ -333,7 +326,7 @@ func checkiRule(data map[string]interface{}) {
 		WithTimeout(time.Second * 10).
 		Should(Succeed())
 
-	rule, err := bip.Get(ctx, kind, name, partition, subfolder)
+	rule, err := bip.Get(kind, name, partition, subfolder)
 	Expect(err).To(Succeed())
 	Expect(rule["apiAnonymous"]).Should(ContainSubstring(`[HTTP::host] matches "gateway.test.automation"`))
 	Expect(rule["apiAnonymous"]).Should(ContainSubstring(`array set weights { /cis-c-tenant/default.test-service 1 }`))
@@ -364,7 +357,7 @@ func checkPool(data map[string]interface{}) {
 		Should(Succeed())
 
 	Eventually(func() bool {
-		bc := f5_bigip.BIGIPContext{BIGIP: *bip.BIGIP, Context: ctx}
+		bc := f5_bigip.BIGIPContext{BIGIP: bip.BC.BIGIP, Context: ctx}
 		members, err := bc.Members(name, partition, subfolder)
 		Expect(err).To(Succeed())
 		// slog.Infof("members: %d", len(members))

@@ -18,9 +18,9 @@ var _ = PDescribe("Webhhooks Validating GatewayClass", Ordered, func() {
 			f, err := yamlBasics.Open(yaml)
 			Expect(err).To(Succeed())
 
-			cs, err := k8s.LoadAndRender(ctx, f, dataBasics)
+			cs, err := k8s.LoadAndRender(f, dataBasics)
 			Expect(err).To(Succeed())
-			Expect(k8s.Apply(ctx, *cs)).To(Succeed())
+			Expect(k8s.Apply(*cs)).To(Succeed())
 		}
 	})
 
@@ -32,9 +32,9 @@ var _ = PDescribe("Webhhooks Validating GatewayClass", Ordered, func() {
 			f, err := yamlBasics.Open(yaml)
 			Expect(err).To(Succeed())
 
-			cs, err := k8s.LoadAndRender(ctx, f, dataBasics)
+			cs, err := k8s.LoadAndRender(f, dataBasics)
 			Expect(err).To(Succeed())
-			Expect(k8s.Delete(ctx, *cs)).To(Succeed())
+			Expect(k8s.Delete(*cs)).To(Succeed())
 		}
 		// make sure partition is removed finally
 		gwcVars := dataBasics["gatewayclass"].(map[string]interface{})
@@ -53,7 +53,7 @@ var _ = PDescribe("Webhhooks Validating GatewayClass", Ordered, func() {
 			f, err := yamlBasics.Open(yaml)
 			Expect(err).To(Succeed())
 
-			cs, err := k8s.LoadAndRender(ctx, f, dataBasics)
+			cs, err := k8s.LoadAndRender(f, dataBasics)
 			Expect(err).To(Succeed())
 			Eventually(k8s.Delete).WithContext(ctx).WithArguments(*cs).WithTimeout(time.Second * 10).Should(Not(Succeed()))
 		})

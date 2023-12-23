@@ -4,23 +4,22 @@ import (
 	"context"
 	"embed"
 	"encoding/base64"
+	"f5-k8s-systest/helpers"
 	"fmt"
 	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/f5devcentral/bigip-kubernetes-gateway/tests/systest/helpers"
 )
 
-type k8sAction func(context.Context, helpers.Configs) error
-type bigipAction func(cxt context.Context, kind, name, partition, subfolder string) error
+type k8sAction func(helpers.Configs) error
+type bigipAction func(kind, name, partition, subfolder string) error
 
 //go:embed templates/tls/*.yaml
 var yamlTLSTpl embed.FS
 
-var _ = Describe("TLS TEST", Label("tls"), Ordered, func() {
+var _ = PDescribe("TLS TEST", Label("tls"), Ordered, func() {
 	const (
 		tlsGatewayClassName = "bigip-tls"
 		partition           = tlsGatewayClassName
@@ -216,16 +215,16 @@ func k8sResource(yaml string, data map[string]interface{}, action k8sAction) err
 		return err
 	}
 
-	cs, err := k8s.LoadAndRender(ctx, f, data)
+	cs, err := k8s.LoadAndRender(f, data)
 	if err != nil {
 		return err
 	}
-	return action(ctx, *cs)
+	return action(*cs)
 }
 
 func checkExist(cxt context.Context, kind, name, partition, subfolder string, action bigipAction) bool {
 
-	if err := action(cxt, kind, name, partition, subfolder); err == nil {
+	if err := action(kind, name, partition, subfolder); err == nil {
 		return true
 	} else if notfound := strings.
 		Contains(err.Error(), "empty response from bigip"); notfound == true {

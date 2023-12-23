@@ -2,19 +2,24 @@ package main_test
 
 import (
 	"context"
+	"embed"
 	"testing"
 
-	"github.com/f5devcentral/bigip-kubernetes-gateway/tests/systest/helpers"
+	"f5-k8s-systest/helpers"
+
 	"github.com/f5devcentral/f5-bigip-rest-go/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var (
-	k8s  *helpers.K8SHelper
-	bip  *helpers.BIGIPHelper
-	slog *utils.SLOG
-	ctx  context.Context
+	//go:embed templates/basics/*.yaml
+	yamlBasics embed.FS
+	dataBasics map[string]interface{}
+	k8s        *helpers.K8SHelper
+	bip        *helpers.BIGIPHelper
+	slog       *utils.SLOG
+	ctx        context.Context
 )
 
 func TestBigipKubernetesGateway(t *testing.T) {
@@ -41,6 +46,7 @@ var _ = BeforeSuite(func() {
 
 	// it will panic if bigip cannot be initialized
 	bip = helpers.NewBIGIPHelper(
+		ctx,
 		sc.BIGIPConfig.Username, sc.BIGIPConfig.Password,
 		sc.BIGIPConfig.IPAddress, sc.BIGIPConfig.Port)
 	slog.Infof("initialized bigip helper")
@@ -50,9 +56,10 @@ var _ = BeforeSuite(func() {
 	} {
 		f, err := yamlBasics.Open(yaml)
 		Expect(err).To(Succeed())
-		cs, err := k8s.LoadAndRender(ctx, f, dataBasics)
+		defer f.Close()
+		cs, err := k8s.LoadAndRender(f, dataBasics)
 		Expect(err).To(Succeed())
-		Expect(k8s.Apply(ctx, *cs)).To(Succeed())
+		Expect(k8s.Apply(*cs)).To(Succeed())
 	}
 })
 
@@ -62,8 +69,8 @@ var _ = AfterSuite(func() {
 	} {
 		f, err := yamlBasics.Open(yaml)
 		Expect(err).To(Succeed())
-		cs, err := k8s.LoadAndRender(ctx, f, dataBasics)
+		cs, err := k8s.LoadAndRender(f, dataBasics)
 		Expect(err).To(Succeed())
-		Expect(k8s.Delete(ctx, *cs)).To(Succeed())
+		Expect(k8s.Delete(*cs)).To(Succeed())
 	}
 })
